@@ -21,7 +21,7 @@ var app = admin.initializeApp(functions.config().firebase);
 var db = admin.firestore();
 
 exports.addMessage = functions.https.onRequest((request, response) => {
-  console.log(app.name);
+  console.log(admin.storage().bucket());
   console.log('Dialogflow Request headers: ' + JSON.stringify(request.headers));
   console.log('Dialogflow Request body: ' + JSON.stringify(request.body));
   if (request.body.queryResult) {
