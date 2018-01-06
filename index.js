@@ -21,7 +21,7 @@ var app = admin.initializeApp(functions.config().firebase);
 var db = admin.firestore();
 
 exports.addMessage = functions.https.onRequest((request, response) => {
-  console.log(admin.storage().bucket());
+  console.log(admin.storage().bucket().name);
   console.log('Dialogflow Request headers: ' + JSON.stringify(request.headers));
   console.log('Dialogflow Request body: ' + JSON.stringify(request.body));
   if (request.body.queryResult) {
@@ -30,37 +30,6 @@ exports.addMessage = functions.https.onRequest((request, response) => {
     console.log('Invalid Request');
     return response.status(400).end('Invalid Webhook Request (expecting v1 or v2 webhook request)');
   }
-});
-
-
-exports.lastReadHubNews = functions.https.onRequest((request, response) => {
-  return requestClient({
-      url: 'https://api.readhub.me/topic?lastCursor=&pageSize=10',
-      json: true
-    }).then(function (body) {
-      var batch = db.batch();
-      for (var i = 0; i < body.data.length; i++) {
-        var docRef = db.collection('readhub').doc(body.data[i].id);
-        console.log(body.data[i].title);
-        batch.set(docRef, {
-          'id': body.data[i].id,
-          'order': body.data[i].order,
-          'title': body.data[i].title,
-          'summary': body.data[i].summary,
-          'updatedAt': body.data[i].updatedAt,
-          'mp3': 'https://firebasestorage.googleapis.com/v0/b/newsradio-14122.appspot.com/o/' + body.data[i].id + '.mp3?alt=media'
-        });
-      }
-      return batch.commit().then(function () {
-        console.log('batch success');
-        return response.status(200).end('success');
-      });
-    })
-    .catch(function (err) {
-      console.log(err);
-      return response.status(400).end(err);
-    });
-
 });
 
 exports.createNews = functions.firestore
@@ -228,7 +197,7 @@ function processV2Request(request, response) {
               'title': body.data[i].title,
               'summary': body.data[i].summary,
               'updatedAt': body.data[i].updatedAt,
-              'mp3': 'https://firebasestorage.googleapis.com/v0/b/newsradio-14122.appspot.com/o/' + body.data[i].id + '.mp3?alt=media'
+              'mp3': 'https://firebasestorage.googleapis.com/v0/b/'+ admin.storage().bucket() +'/o/' + body.data[i].id + '.mp3?alt=media'
             });
           }
           return batch.commit().then(function () {
