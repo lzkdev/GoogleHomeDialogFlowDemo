@@ -206,7 +206,7 @@ function processV2Request(request, response) {
               'title': body.data[i].title,
               'summary': body.data[i].summary,
               'updatedAt': body.data[i].updatedAt,
-              'mp3': 'https://firebasestorage.googleapis.com/v0/b/' + admin.storage().bucket() + '/o/' + body.data[i].id + '.mp3?alt=media'
+              'mp3': 'https://firebasestorage.googleapis.com/v0/b/' + admin.storage().bucket().name + '/o/' + body.data[i].id + '.mp3?alt=media'
             });
           }
           return batch.commit().then(function () {
