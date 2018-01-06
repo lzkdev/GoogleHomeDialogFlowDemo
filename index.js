@@ -92,6 +92,8 @@ exports.createNews = functions.firestore
             console.log(file);
           } else {
             console.log(err);
+            var deleteDoc = db.collection('readhub').doc(newValue.id).delete();
+            console.log(deleteDoc);
           }
           fs.unlinkSync(tempFilePath);
         });
@@ -99,64 +101,16 @@ exports.createNews = functions.firestore
       } else {
         // 服务发生错误
         console.log(result)
+        var deleteDoc = db.collection('readhub').doc(newValue.id).delete();
+        console.log(deleteDoc);
       }
     }, function (e) {
       // 发生网络错误
       console.log(e)
+      var deleteDoc = db.collection('readhub').doc(newValue.id).delete();
+      console.log(deleteDoc);
     });
   });
-
-
-exports.text2Audio = functions.https.onRequest((request, response) => {
-  console.log('begin-------------------');
-  var tex = "据澎湃报道，从中国铁路上海局集团有限公司了解到，长三角2018年春运期间，预计发送旅客7140万人，同比增加449.6万人，同比增长6.7%，日均发送旅客量达178.5万人。为此，铁路部门计划开行1114.5对客车应对大客流，春运总运力将创历史新高。2018年春运自2月1日起至3月12日止，分为节前15天、节后25天，共计40天。";
-  // 新建一个对象，建议只保存一个对象调用服务接口
-  var client = new AipSpeechClient(APP_ID, API_KEY, SECRET_KEY);
-  // 语音合成, 附带可选参数
-  var options = {
-    spd: 5,
-    per: 0
-  };
-  client.text2audio(tex, options).then(function (result) {
-    console.log('step1-------------------');
-    if (result.data) {
-      const tempFilePath = path.join(os.tmpdir(), 'tts.mpVoice.mp3');
-      fs.writeFileSync(tempFilePath, result.data);
-      const metadata = {
-        contentType: 'audio/mp3'
-      };
-      // var fileBucket = functions.storage.bucket('gs://newsradio-14122.appspot.com')
-      var bucket = admin.storage().bucket();
-      console.log(bucket);
-      // return bucket.upload(tempFilePath);
-      bucket.upload(tempFilePath, {
-        destination: 'tts.mpVoice.mp3',
-        metadata: metadata
-      }, function (err, file) {
-        if (!err) {
-          // "zebra.jpg" is now in your bucket.
-          console.log(file);
-          file
-          return response.status(200).end('success');
-        } else {
-          console.log(err);
-          return response.status(400).end('bad');
-        }
-        fs.unlinkSync(tempFilePath);
-      });
-
-    } else {
-      // 服务发生错误
-      console.log(result)
-      return response.status(400).end('bad');
-    }
-  }, function (e) {
-    // 发生网络错误
-    console.log(e)
-    return response.status(400).end('bad');
-  });
-  // return response.status(200).end('success');
-});
 
 /*
  * Function to handle v2 webhook requests from Dialogflow
@@ -167,11 +121,15 @@ function processV2Request(request, response) {
   // Parameters are any entites that Dialogflow has extracted from the request.
   let parameters = request.body.queryResult.parameters || {}; // https://dialogflow.com/docs/actions-and-parameters
   // Contexts are objects used to track and store conversation state
-  let inputContexts = request.body.queryResult.contexts; // https://dialogflow.com/docs/contexts
+  let inputContexts = request.body.queryResult.outputContexts; // https://dialogflow.com/docs/contexts
   // Get the request source (Google Assistant, Slack, API, etc)
   let requestSource = (request.body.originalDetectIntentRequest) ? request.body.originalDetectIntentRequest.source : undefined;
   // Get the session ID to differentiate calls from different users
   let session = (request.body.session) ? request.body.session : undefined;
+
+  console.log(parameters);
+  console.log(inputContexts);
+
   // Create handlers for Dialogflow actions as well as a 'default' handler
   const actionHandlers = {
     // The default welcome intent has been matched, welcome the user (https://dialogflow.com/docs/events#default_welcome_intent)
@@ -193,15 +151,58 @@ function processV2Request(request, response) {
             }
           }];
           var responseArray = '';
+          var lastOrder=0;
           snapshot.forEach(doc => {
             console.log(doc.id, '=>', doc.data());
             var ssml = "<audio src = '" + doc.data().mp3 + "' />";
             responseArray = responseArray + ssml + '<break time="2000ms"/>';
+            lastOrder = doc.data().order;
           });
           console.log(responseArray);
           responseBody[0]['simple_responses']['simple_responses'][0]['ssml'] = '<speak>'+responseArray+'</speak>';
           let responseToUser = {
-            fulfillmentMessages: responseBody
+            fulfillmentMessages: responseBody,
+            outputContexts: [{ 'name': `${session}/contexts/news`, 'lifespanCount': 2, 'parameters': {'order': lastOrder} }]
+          };
+          sendResponse(responseToUser);
+        })
+        .catch(err => {
+          console.log('Error getting documents', err);
+          sendResponse('I\'m having trouble, can you try that again?');
+        });
+
+    },
+    'news.news-more': () => {
+      var newsRef = db.collection('readhub');
+      var lastOrder = inputContexts.find(element => element.name === `${session}/contexts/news`);
+      console.log(lastOrder);
+      var lastThree = newsRef.orderBy('order', 'desc').where('order', '<', lastOrder.parameters['order']).limit(10).get()
+        .then(snapshot => {
+          var responseBody = [{
+            'platform': 'ACTIONS_ON_GOOGLE',
+            'simple_responses': {
+              'simple_responses': [{
+                'ssml': "",
+                'display_text': "more news from readhub"
+              }]
+            }
+          }];
+          var responseArray = '';
+          var lastOrder=0;
+          snapshot.forEach(doc => {
+            console.log(doc.id, '=>', doc.data());
+            var ssml = "<audio src = '" + doc.data().mp3 + "' />";
+            responseArray = responseArray + ssml + '<break time="2000ms"/>';
+            lastOrder = doc.data().order;
+          });
+          console.log(responseArray);
+          if(responseArray == ''){
+            responseArray = 'no more news now';
+          }
+          responseBody[0]['simple_responses']['simple_responses'][0]['ssml'] = '<speak>'+responseArray+'</speak>';
+          let responseToUser = {
+            fulfillmentMessages: responseBody,
+            outputContexts: [{ 'name': `${session}/contexts/news`, 'lifespanCount': 2, 'parameters': {'order': lastOrder} }]
           };
           sendResponse(responseToUser);
         })
@@ -238,6 +239,9 @@ function processV2Request(request, response) {
           console.log(err);
           sendResponse('I\'m having trouble, can you try that again?');
         });
+    },
+    'input.weather': () => {
+      sendResponse('get weather');
     },
     // The default fallback intent has been matched, try to recover (https://dialogflow.com/docs/intents#fallback_intents)
     'input.unknown': () => {
