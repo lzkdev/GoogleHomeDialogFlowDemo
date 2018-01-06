@@ -21,7 +21,6 @@ var app = admin.initializeApp(functions.config().firebase);
 var db = admin.firestore();
 
 exports.addMessage = functions.https.onRequest((request, response) => {
-  console.log(admin.storage().bucket().name);
   console.log('Dialogflow Request headers: ' + JSON.stringify(request.headers));
   console.log('Dialogflow Request body: ' + JSON.stringify(request.body));
   if (request.body.queryResult) {
@@ -45,7 +44,6 @@ exports.createNews = functions.firestore
       per: 0
     };
     return client.text2audio(summary, options).then(function (result) {
-      console.log('step1-------------------');
       if (result.data) {
         const tempFilePath = path.join(os.tmpdir(), fileName);
         fs.writeFileSync(tempFilePath, result.data);
@@ -58,7 +56,6 @@ exports.createNews = functions.firestore
           metadata: metadata
         }, function (err, file) {
           if (!err) {
-            // "zebra.jpg" is now in your bucket.
             console.log(file);
           } else {
             console.log(err);
@@ -104,7 +101,7 @@ function processV2Request(request, response) {
   const actionHandlers = {
     // The default welcome intent has been matched, welcome the user (https://dialogflow.com/docs/events#default_welcome_intent)
     'input.welcome': () => {
-      sendResponse('Hello, Welcome to news agent!'); // Send simple response to user
+      sendResponse('Hello, what can i do for you!'); // Send simple response to user
     },
     'input.news': () => {
 
@@ -121,7 +118,7 @@ function processV2Request(request, response) {
             }
           }];
           var responseArray = '';
-          var lastOrder=0;
+          var lastOrder = 0;
           snapshot.forEach(doc => {
             console.log(doc.id, '=>', doc.data());
             var ssml = "<audio src = '" + doc.data().mp3 + "' />";
@@ -129,10 +126,16 @@ function processV2Request(request, response) {
             lastOrder = doc.data().order;
           });
           console.log(responseArray);
-          responseBody[0]['simple_responses']['simple_responses'][0]['ssml'] = '<speak>'+responseArray+'</speak>';
+          responseBody[0]['simple_responses']['simple_responses'][0]['ssml'] = '<speak>' + responseArray + '</speak>';
           let responseToUser = {
             fulfillmentMessages: responseBody,
-            outputContexts: [{ 'name': `${session}/contexts/news`, 'lifespanCount': 2, 'parameters': {'order': lastOrder} }]
+            outputContexts: [{
+              'name': `${session}/contexts/news`,
+              'lifespanCount': 2,
+              'parameters': {
+                'order': lastOrder
+              }
+            }]
           };
           sendResponse(responseToUser);
         })
@@ -158,7 +161,7 @@ function processV2Request(request, response) {
             }
           }];
           var responseArray = '';
-          var lastOrder=0;
+          var lastOrder = 0;
           snapshot.forEach(doc => {
             console.log(doc.id, '=>', doc.data());
             var ssml = "<audio src = '" + doc.data().mp3 + "' />";
@@ -166,13 +169,19 @@ function processV2Request(request, response) {
             lastOrder = doc.data().order;
           });
           console.log(responseArray);
-          if(responseArray == ''){
+          if (responseArray == '') {
             responseArray = 'no more news now';
           }
-          responseBody[0]['simple_responses']['simple_responses'][0]['ssml'] = '<speak>'+responseArray+'</speak>';
+          responseBody[0]['simple_responses']['simple_responses'][0]['ssml'] = '<speak>' + responseArray + '</speak>';
           let responseToUser = {
             fulfillmentMessages: responseBody,
-            outputContexts: [{ 'name': `${session}/contexts/news`, 'lifespanCount': 2, 'parameters': {'order': lastOrder} }]
+            outputContexts: [{
+              'name': `${session}/contexts/news`,
+              'lifespanCount': 2,
+              'parameters': {
+                'order': lastOrder
+              }
+            }]
           };
           sendResponse(responseToUser);
         })
@@ -197,7 +206,7 @@ function processV2Request(request, response) {
               'title': body.data[i].title,
               'summary': body.data[i].summary,
               'updatedAt': body.data[i].updatedAt,
-              'mp3': 'https://firebasestorage.googleapis.com/v0/b/'+ admin.storage().bucket() +'/o/' + body.data[i].id + '.mp3?alt=media'
+              'mp3': 'https://firebasestorage.googleapis.com/v0/b/' + admin.storage().bucket() + '/o/' + body.data[i].id + '.mp3?alt=media'
             });
           }
           return batch.commit().then(function () {
@@ -270,27 +279,7 @@ const richResponseV2Card = {
     'postback': 'https://assistant.google.com/'
   }]
 };
-const audioResponsesV2 = [{
-    'platform': 'ACTIONS_ON_GOOGLE',
-    'simple_responses': {
-      'simple_responses': [{
-        'text_to_speech': 'webhook',
-        "ssml": "<speak>webhook <audio src = 'https://actions.google.com/sounds/v1/water/humidifier_bubble.ogg' />, what’s the animal? </speak>",
-        'display_text': 'webhook'
-      }]
-    }
-  },
-  {
-    'platform': 'ACTIONS_ON_GOOGLE',
-    'simple_responses': {
-      'simple_responses': [{
-        'text_to_speech': 'hell world',
-        "ssml": "<speak>hell world <audio src = 'https://actions.google.com/sounds/v1/water/humidifier_bubble.ogg' />, what’s the animal? </speak>",
-        'display_text': 'hell world'
-      }]
-    }
-  }
-];
+
 const richResponsesV2 = [{
     'platform': 'ACTIONS_ON_GOOGLE',
     'simple_responses': {
