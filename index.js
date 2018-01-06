@@ -191,6 +191,21 @@ function processV2Request(request, response) {
         });
 
     },
+    'input.music': () => {
+      const responseMusic = [{
+        'platform': 'ACTIONS_ON_GOOGLE',
+        'simple_responses': {
+          'simple_responses': [{
+            'ssml': '<speak><audio src = "https://m10.music.126.net/20180106163314/57191f7f95364c1de08abb6ad1895662/ymusic/d79e/e575/49cb/e605f7ff59111392dfc3641f06807c8f.mp3" /><break time="2000ms"></speak>',
+            'display_text': 'play music'
+          }]
+        }
+      }];
+      let responseToUser = {
+        fulfillmentMessages: responseMusic
+      };
+      sendResponse(responseToUser);
+    },
     'input.update': () => {
       return requestClient({
           url: 'https://api.readhub.me/topic?lastCursor=&pageSize=10',
