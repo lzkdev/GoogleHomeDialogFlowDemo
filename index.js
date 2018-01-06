@@ -94,8 +94,6 @@ function processV2Request(request, response) {
   // Get the session ID to differentiate calls from different users
   let session = (request.body.session) ? request.body.session : undefined;
 
-  console.log(parameters);
-  console.log(inputContexts);
 
   // Create handlers for Dialogflow actions as well as a 'default' handler
   const actionHandlers = {
@@ -192,7 +190,7 @@ function processV2Request(request, response) {
 
     },
     'input.music': () => {
-      var ssml = "<speak><audio src = 'https://m10.music.126.net/20180106163314/57191f7f95364c1de08abb6ad1895662/ymusic/d79e/e575/49cb/e605f7ff59111392dfc3641f06807c8f.mp3' /></speak>";
+      var ssml = "<speak><audio src = 'https://lzkdev.com/music/20180106211648/0e60f6a3f05be7c8663f3c4dcbb95964/ymusic/d79e/e575/49cb/e605f7ff59111392dfc3641f06807c8f.mp3' /></speak>";
       const responseMusic = [{
         'platform': 'ACTIONS_ON_GOOGLE',
         'simple_responses': {
