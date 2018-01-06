@@ -17,11 +17,11 @@ var APP_ID = functions.config().baidu.app_id;
 var API_KEY = functions.config().baidu.api_key;
 var SECRET_KEY = functions.config().baidu.secret_key;
 
-admin.initializeApp(functions.config().firebase);
+var app = admin.initializeApp(functions.config().firebase);
 var db = admin.firestore();
 
 exports.addMessage = functions.https.onRequest((request, response) => {
-  console.log(admin.app().name);
+  console.log(app.name);
   console.log('Dialogflow Request headers: ' + JSON.stringify(request.headers));
   console.log('Dialogflow Request body: ' + JSON.stringify(request.body));
   if (request.body.queryResult) {
