@@ -190,7 +190,7 @@ function processV2Request(request, response) {
 
     },
     'input.music': () => {
-      var ssml = "<speak><audio src = 'https://lzkdev.com/music/20180106211648/0e60f6a3f05be7c8663f3c4dcbb95964/ymusic/d79e/e575/49cb/e605f7ff59111392dfc3641f06807c8f.mp3' /></speak>";
+      var ssml = "<speak><audio src = 'http://lzkdev.com/music/20180106215524/de16cca1b568df77e5f2fb5468ead676/ymusic/f0a4/6fdb/60ef/0c6d0b846c57e3bf52ec1a4d9141c540.mp3' /><break time='2000ms'/><audio src = 'https://lzkdev.com/music/20180106211648/0e60f6a3f05be7c8663f3c4dcbb95964/ymusic/d79e/e575/49cb/e605f7ff59111392dfc3641f06807c8f.mp3' /></speak>";
       const responseMusic = [{
         'platform': 'ACTIONS_ON_GOOGLE',
         'simple_responses': {
