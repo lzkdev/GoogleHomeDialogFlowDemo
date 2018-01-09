@@ -254,7 +254,48 @@ function processV2Request(request, response) {
           console.log(err);
           sendResponse('I\'m having trouble, can you try that again?');
         });
-      }
+      } else if (parameters.any){
+        return requestClient({
+          url: MUSIC_API_HOST+'/search?keywords='+parameters.any,
+          json: true
+        }).then(function (body) {
+          if(body.result.songCount>0){
+            var music_id = body.result.songs[0].id;
+            var music_name = body.result.songs[0].name;
+            return requestClient({
+              url: MUSIC_API_HOST+'/music/url?id='+music_id,
+              json: true
+            }).then(function (body) {
+                console.log(body);
+                var responseBody = [{
+                  'platform': 'ACTIONS_ON_GOOGLE',
+                  'simple_responses': {
+                    'simple_responses': [{
+                      'ssml': "<speak><audio src = '" + body.data[0].url + "' /></speak>",
+                      'display_text': music_name
+                    }]
+                  }
+                }];
+                let responseToUser = {
+                  fulfillmentMessages: responseBody
+                };
+                sendResponse(responseToUser);
+            })
+            .catch(function (err) {
+              console.log(err);
+              sendResponse('I\'m having trouble, can you try that again?');
+            });
+          } else {
+            sendResponse("not result");
+          }
+          
+          
+        })
+        .catch(function (err) {
+          console.log(err);
+          sendResponse('I\'m having trouble, can you try that again?');
+        });
+      } 
     },
     'input.update': () => {
       return requestClient({
