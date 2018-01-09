@@ -214,6 +214,7 @@ function processV2Request(request, response) {
           url: MUSIC_API_HOST+'/login/cellphone?phone='+MUSIC_ACCOUNT+'&password='+MUSIC_PASSWORD,
           json: true
         }).then(function (body) {
+          console.log(body);
            requestClient({
             url: MUSIC_API_HOST+'/recommend/songs',
             json: true
@@ -236,6 +237,7 @@ function processV2Request(request, response) {
           url: MUSIC_API_HOST+'/recommend/songs',
           json: true
         }).then(function (body) {
+          console.log(body);
           requestClient({
             url: MUSIC_API_HOST+'/personal_fm',
             json: true
