@@ -271,7 +271,7 @@ function processV2Request(request, response) {
                   'platform': 'ACTIONS_ON_GOOGLE',
                   'simple_responses': {
                     'simple_responses': [{
-                      'ssml': "<speak><audio src = '" + body.data[0].url + "' /></speak>",
+                      'ssml': "<speak><audio src = '" + body.data[0].url.replace('http://m10.music.126.net','https://lzkdev.com/musicapi') + "' /></speak>",
                       'display_text': music_name
                     }]
                   }
