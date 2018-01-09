@@ -211,23 +211,42 @@ function processV2Request(request, response) {
         });
       } else if (parameters.recommend){
         return requestClient({
-          url: MUSIC_API_HOST+'/recommend/songs',
+          url: MUSIC_API_HOST+'/login/cellphone?phone='+MUSIC_ACCOUNT+'&password='+MUSIC_PASSWORD,
           json: true
         }).then(function (body) {
-            console.log(body);
-            sendResponse('finished, try music');
+           requestClient({
+            url: MUSIC_API_HOST+'/recommend/songs',
+            json: true
+          }).then(function (body) {
+              console.log(body);
+              sendResponse('finished, try music');
+          })
+          .catch(function (err) {
+            console.log(err);
+            sendResponse('I\'m having trouble, can you try that again?');
+          });
         })
         .catch(function (err) {
           console.log(err);
           sendResponse('I\'m having trouble, can you try that again?');
         });
+        
       } else if (parameters.fm){
         return requestClient({
-          url: MUSIC_API_HOST+'/personal_fm',
+          url: MUSIC_API_HOST+'/recommend/songs',
           json: true
         }).then(function (body) {
-            console.log(body);
-            sendResponse('finished, try music');
+          requestClient({
+            url: MUSIC_API_HOST+'/personal_fm',
+            json: true
+          }).then(function (body) {
+              console.log(body);
+              sendResponse('finished, try music');
+          })
+          .catch(function (err) {
+            console.log(err);
+            sendResponse('I\'m having trouble, can you try that again?');
+          });
         })
         .catch(function (err) {
           console.log(err);
