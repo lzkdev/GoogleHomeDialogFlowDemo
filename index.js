@@ -12,10 +12,16 @@ const requestClient = require('request-promise');
 
 const AipSpeechClient = require("baidu-aip-sdk").speech;
 
-// 设置APPID/AK/SK
+// 设置百度语音合成 APPID/AK/SK
 var APP_ID = functions.config().baidu.app_id;
 var API_KEY = functions.config().baidu.api_key;
 var SECRET_KEY = functions.config().baidu.secret_key;
+
+// 设置网易云音乐接口参数
+var MUSIC_API_HOST = functions.config().music.api_host;
+var MUSIC_ACCOUNT = functions.config().music.account;
+var MUSIC_PASSWORD = functions.config().music.password;
+var MUSIC_ACCOUNT_ID = functions.config().music.account_id;
 
 var app = admin.initializeApp(functions.config().firebase);
 var db = admin.firestore();
@@ -190,20 +196,44 @@ function processV2Request(request, response) {
 
     },
     'input.music': () => {
-      var ssml = "<speak><audio src = 'http://lzkdev.com/music/20180106215524/de16cca1b568df77e5f2fb5468ead676/ymusic/f0a4/6fdb/60ef/0c6d0b846c57e3bf52ec1a4d9141c540.mp3' /><break time='2000ms'/><audio src = 'https://lzkdev.com/music/20180106211648/0e60f6a3f05be7c8663f3c4dcbb95964/ymusic/d79e/e575/49cb/e605f7ff59111392dfc3641f06807c8f.mp3' /></speak>";
-      const responseMusic = [{
-        'platform': 'ACTIONS_ON_GOOGLE',
-        'simple_responses': {
-          'simple_responses': [{
-            'ssml': ssml,
-            'display_text': 'play music'
-          }]
-        }
-      }];
-      let responseToUser = {
-        fulfillmentMessages: responseMusic
-      };
-      sendResponse(responseToUser);
+      
+      if (parameters.login) {
+        return requestClient({
+          url: MUSIC_API_HOST+'/login/cellphone?phone='+MUSIC_ACCOUNT+'&password='+MUSIC_PASSWORD,
+          json: true
+        }).then(function (body) {
+            console.log(body);
+            sendResponse('finished, try music');
+        })
+        .catch(function (err) {
+          console.log(err);
+          sendResponse('I\'m having trouble, can you try that again?');
+        });
+      } else if (parameters.recommend){
+        return requestClient({
+          url: MUSIC_API_HOST+'/recommend/songs',
+          json: true
+        }).then(function (body) {
+            console.log(body);
+            sendResponse('finished, try music');
+        })
+        .catch(function (err) {
+          console.log(err);
+          sendResponse('I\'m having trouble, can you try that again?');
+        });
+      } else if (parameters.fm){
+        return requestClient({
+          url: MUSIC_API_HOST+'/personal_fm',
+          json: true
+        }).then(function (body) {
+            console.log(body);
+            sendResponse('finished, try music');
+        })
+        .catch(function (err) {
+          console.log(err);
+          sendResponse('I\'m having trouble, can you try that again?');
+        });
+      }
     },
     'input.update': () => {
       return requestClient({
